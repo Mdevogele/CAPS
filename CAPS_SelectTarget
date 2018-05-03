@@ -21,6 +21,13 @@ from scipy.ndimage import interpolation as interp
 from scipy.interpolate import InterpolatedUnivariateSpline
 
 
+from photutils import CircularAperture
+from photutils import aperture_photometry
+from photutils import CircularAnnulus
+from photutils import make_source_mask
+from astropy.stats import sigma_clipped_stats
+
+
 from photutils.datasets import make_4gaussians_image
 from photutils import centroid_com, centroid_1dg, centroid_2dg
 
@@ -132,6 +139,8 @@ class Clicker(object):
         
         elif event.char == 'x':
             self.Show_Targets()
+        elif event.char == 'p':
+            self.Photometrie()    
 
     def right_click(self, event):
         """ next frame """
@@ -293,7 +302,53 @@ class Clicker(object):
        #                                         self.Ty[self.index][0]/2+1, outline='red',
        #                                             width=2))           
 
+    def Photometrie(self):
+        
+        q = []
+        u = []
+        for idx,elem in enumerate(self.data):
+            phot = []
+            for x,y in zip(self.Tx[self.index],self.Ty[self.index]):
+                radii = range(3,50)
+                positions = [(x, y)]
+                apertures = [CircularAperture(positions, r=r) for r in radii]
+                annulus_apertures = CircularAnnulus(positions, r_in=30., r_out=50.)
+                phot_table = aperture_photometry(self.data[self.index], apertures)
+                phot_background = aperture_photometry(self.data[self.index], annulus_apertures)
+                bkg_mean = phot_background['aperture_sum'] / annulus_apertures.area()
+                Int= []
+                Area = []
+                Int_bkg1 = []
+                mask = make_source_mask(self.data[self.index], snr=2, npixels=5, dilate_size=11)
+                mean, median, std = sigma_clipped_stats(self.data[self.index], sigma=3.0, mask=mask)    
+    
+                for num in range(3,50):
+                    Int.append(phot_table[0][num])
+                    Area.append(apertures[num-3].area())
+                    Int_bkg1.append(phot_table[0][num] - apertures[num-3].area()*bkg_mean)
+    
+            
+            
+                phot.append(Int_bkg1)
+            
+            phot = numpy.array(phot)
+            qq = (phot[0]-phot[1])/(phot[0]+phot[1])
+            uu = (phot[2]-phot[3])/(phot[2]+phot[3])
+            q.append(qq.flatten())
+            u.append(uu.flatten())
+            self.nextframe(1)
 
+        q = numpy.array(q)
+        with open('q', 'w') as f:
+            for elem in q:
+                for elem2 in elem:
+                    f.write(str(elem2) + '\n')
+
+        u = numpy.array(u)
+        with open('u', 'w') as f:
+            for elem in u:
+                for elem2 in elem:
+                    f.write(str(elem2) + '\n')
 
 if __name__ == '__main__':
     
