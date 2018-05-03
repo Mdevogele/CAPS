@@ -24,12 +24,6 @@ try:
 except ImportError:
     print('Module numpy not found. Please install with: pip install numpy')
     sys.exit()
-    
-# import pipeline-specific modules
-
-# only import if Python3 is used
-if sys.version_info > (3, 0):
-    from past.builtins import execfile
 
 
 def setup_diagnostics():
@@ -113,61 +107,3 @@ if sys.version_info > (3, 0):
 else:
     import string
     target2filename = string.maketrans(' /()', '____')
-
-# available catalogs
-
-# list of available catalogs
-allcatalogs = ['URAT-1', '2MASS', 'SDSS-R9', 'SDSS-R13', 'APASS9', 'GAIA',
-               'PANSTARRS', 'TGAS']
-
-# catalog magnitude systems
-allcatalogs_magsys = {'URAT-1': 'Vega',
-                      '2MASS': 'Vega',
-                      'SDSS-R9': 'AB',
-                      'SDSS-R13': 'AB',
-                      'APASS9': 'Vega',
-                      'GAIA': 'Vega',
-                      'PANSTARRS': 'AB',
-                      'TGAS': 'Vega'}
-
-# ---- pipeline preferences
-# (if you don't know what you're doing, better don't mess around here)
-
-# minimum number of reference sources in astrometric reference catalog
-# in one of the frames (middle one of sequence); try other catalog
-# if number of sources less than this number
-min_sources_astrometric_catalog = 10
-
-# how often to run SCAMP using one single catalog?
-n_registration_repetitions = 2
-
-# minimum number of reference sources in photometric reference catalog
-min_sources_photometric_catalog = 3
-
-# SCAMP contrast criteria for a good fit
-scamp_as_contrast_limit = 2.5
-scamp_xy_contrast_limit = 2.5
-
-# positional uncertainty (arcsec) for target identification and
-# cross-matching used in pp_photometry
-pos_epsilon = 0.5
-
-# flux threshold and margin for finding optimum aperture radius in
-# pp_photometry
-fluxlimit_aprad = 0.7
-fluxmargin_aprad = 0.05
-
-# minimum number of stars (integer number) or fraction (float) to use in
-# photometric calibration
-minstars = 0.5
-
-# solar color margin
-# solar color filtering allows for color indices
-# [color-_pp_conf.solcol -- color+_pp_conf.solcol]
-solcol = 0.2
-
-
-# photometry flavor ['APER', 'ISOCOR', 'AUTO']
-photmode = 'APER'
-## don't change this unless you understand what you are doing
-
