@@ -54,6 +54,8 @@ class Clicker(object):
         
         self.redcircle = []
 
+        self.JD = []
+
         ### load image data
         print('please wait, loading images...', end=' ')
         sys.stdout.flush()
@@ -163,7 +165,7 @@ class Clicker(object):
             ## read image data
             hdulist = fits.open(filename, ignore_missing_end=True)
             imgdat = hdulist[0].data
-
+            self.JD.append(hdulist[0].header['MJD-MOBS'])
             self.data.append(imgdat)
             # median = numpy.median(imgdat)
             # std    = numpy.std(imgdat)
@@ -177,7 +179,7 @@ class Clicker(object):
             imgdat = interp.zoom(imgdat, self.zoom)
 
             self.images.append(Image.fromarray(imgdat))
-            
+
     def nextframe(self,i=1, imgnum=-1):
         """ display frame using iterator i"""
 
@@ -312,7 +314,7 @@ class Clicker(object):
                 radii = range(3,50)
                 positions = [(x, y)]
                 apertures = [CircularAperture(positions, r=r) for r in radii]
-                annulus_apertures = CircularAnnulus(positions, r_in=30., r_out=50.)
+                annulus_apertures = CircularAnnulus(positions, r_in=20., r_out=40.)
                 phot_table = aperture_photometry(self.data[self.index], apertures)
                 phot_background = aperture_photometry(self.data[self.index], annulus_apertures)
                 bkg_mean = phot_background['aperture_sum'] / annulus_apertures.area()
@@ -322,7 +324,7 @@ class Clicker(object):
                 mask = make_source_mask(self.data[self.index], snr=2, npixels=5, dilate_size=11)
                 mean, median, std = sigma_clipped_stats(self.data[self.index], sigma=3.0, mask=mask)    
     
-                for num in range(3,50):
+                for num in range(3,30):
                     Int.append(phot_table[0][num])
                     Area.append(apertures[num-3].area())
                     Int_bkg1.append(phot_table[0][num] - apertures[num-3].area()*bkg_mean)
@@ -330,25 +332,34 @@ class Clicker(object):
             
             
                 phot.append(Int_bkg1)
-            
+                
+            filename = self.files[self.index]
             phot = numpy.array(phot)
             qq = (phot[0]-phot[1])/(phot[0]+phot[1])
+            q.append(qq.flatten())
             uu = (phot[2]-phot[3])/(phot[2]+phot[3])
+            with open(filename +'.txt', 'w') as f:
+                for elem3,elem4 in zip(qq,uu):
+                    for elem2,elem1 in zip(elem3,elem4):
+                        f.write(str(self.JD[self.index]) + '\t' + str(elem2) + '\t' + str(elem1)+ '\n')
             q.append(qq.flatten())
             u.append(uu.flatten())
             self.nextframe(1)
+            
+            print('Image ' + str(self.index) + ' processed')
+            print('Background: ' + str(bkg_mean))
 
         q = numpy.array(q)
         with open('q', 'w') as f:
             for elem in q:
                 for elem2 in elem:
-                    f.write(str(elem2) + '\n')
+                    f.write(str(self.JD[self.index]) + '\t' + str(elem2) + '\n')
 
         u = numpy.array(u)
         with open('u', 'w') as f:
             for elem in u:
                 for elem2 in elem:
-                    f.write(str(elem2) + '\n')
+                    f.write(str(self.JD[self.index]) + '\t' + str(elem2) + '\n')
 
 if __name__ == '__main__':
     
