@@ -1,0 +1,43 @@
+1) Create the master dark 
+
+CAPS_Bias.py ./Darks/*fits -o MasterDark_0s2.fits
+
+2) Process the Standard stars images 
+
+Create a folder with processed images 
+
+mkdir Reduced_images
+
+CAPS_Preproc.py ./Standard/*fits -b MasterDark_0s2.fits -o ./Reduced_Images/
+
+3) Select star in images 
+
+CAPS_SelectTarget ./Reduced_Images/*fits
+
+-Click on the top star. The pipeline should then automatically detect all the stars.
+-Press ‘z’ to detect the stars on all images.  
+-Press ‘x’ to review all images and check if the stars have been well detected 
+-Press ‘p’ to perform photometry. 
+
+The pipeline then automatically write files containing the results for each individual images 
+
+see: LoPol-HD39587_20190128T213937786_SC_V_0000s200_000000_Procc.fits.txt
+
+-Press ‘q’ to exit
+
+4) Analyse the photometry
+
+CAPS_Anal.py ./Reduced_Images/*txt -plot -SS
+
+-SS indicate that we are dealing with a standard star
+-plot allows to plot the curve of growth.
+
+Check on the plot the aperture where the curve of growth stabilizes.
+When you close the figure, the pipeline will ask you what aperture to use. 
+
+Here use 20 for example 
+
+The pipeline will write two files with the Best_q and Best_u Stokes parameters and a files containing a summary of the results containing the JD, q, and u.
+
+The reduction of the standard star is now done.  
+
