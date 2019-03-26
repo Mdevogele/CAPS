@@ -306,25 +306,28 @@ class Clicker(object):
 
     def Photometrie(self):
         
+        Begin = 10
+        End = 50
         q = []
         u = []
         for idx,elem in enumerate(self.data):
             phot = []
             for x,y in zip(self.Tx[self.index],self.Ty[self.index]):
-                radii = range(3,50)
+                radii = range(Begin,End)
                 positions = [(x, y)]
                 apertures = [CircularAperture(positions, r=r) for r in radii]
-                annulus_apertures = CircularAnnulus(positions, r_in=20., r_out=40.)
+                annulus_apertures = CircularAnnulus(positions, r_in=30., r_out=40.)
                 phot_table = aperture_photometry(self.data[self.index], apertures)
                 phot_background = aperture_photometry(self.data[self.index], annulus_apertures)
                 bkg_mean = phot_background['aperture_sum'] / annulus_apertures.area()
                 Int= []
                 Area = []
                 Int_bkg1 = []
-                mask = make_source_mask(self.data[self.index], snr=2, npixels=5, dilate_size=11)
-                mean, median, std = sigma_clipped_stats(self.data[self.index], sigma=3.0, mask=mask)    
-    
-                for num in range(3,30):
+#                mask = make_source_mask(self.data[self.index], snr=2, npixels=5, dilate_size=11)
+#                mean, median, std = sigma_clipped_stats(self.data[self.index], sigma=3.0, mask=mask)    
+                
+                # 3 because photometry in phot_table start at the indice 3 instead of 0 
+                for num in range(3,3+End-Begin):
                     Int.append(phot_table[0][num])
                     Area.append(apertures[num-3].area())
                     Int_bkg1.append(phot_table[0][num] - apertures[num-3].area()*bkg_mean)
