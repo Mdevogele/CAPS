@@ -9,14 +9,20 @@ import argparse
 import numpy as np
 import operator
 from astroquery.jplhorizons import Horizons
+import sys
 
 
 
-def Anal(filenames,Auto,Plot,SS):
+def Anal(filenames,Auto,Plot,SS,Target):
 
-    if not SS:
+    if not SS and not Target:
         Target = int(filenames[0].split('-')[0])
+    else:
+        Target = Target.split('_')[0]+ ' ' + Target.split('_')[1]
     
+        
+    
+    print(Target)
     qq = []
     uu = [] 
     Alpha = []
@@ -91,7 +97,7 @@ def Anal(filenames,Auto,Plot,SS):
         print(min_index)
         print('%.5f +- %.5f' % (np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
     else:
-        min_index = int(raw_input("What aperture do you want to use?: "))
+        min_index = int(input("What aperture do you want to use?: "))
         print('%.5f +- %.5f' % (np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
         
     
@@ -155,7 +161,7 @@ if __name__ == '__main__':
     filenames = args.images
     SS = args.SS
 
-    Anal(filenames,Auto,Plot,SS)
+    Anal(filenames,Auto,Plot,SS,Target)
 
 
     pass

@@ -112,7 +112,7 @@ class Clicker(object):
         
         
         
-        self.Select_Target(self.data[self.index],x,y,30)
+        self.Select_Target(self.data[self.index],x,y,50)
 
 
     def key(self, event):
@@ -204,7 +204,7 @@ class Clicker(object):
         im = self.images[self.index]
 
         self.tkimage.paste(im)
-        
+        self.canvas.update()
         #delete previous circles
         for elem in self.redcircle:
             self.canvas.delete(elem)
@@ -220,7 +220,7 @@ class Clicker(object):
     
         D = image[int(y)-box:int(y)+box,int(x)-box:int(x)+box]
                 
-        xn,yn = centroid_com(D-numpy.median(D))
+        xn,yn = centroid_2dg(D)
         print(xn,yn)
         xn = xn+int(x)-box
         yn = yn+int(y)-box
@@ -234,7 +234,7 @@ class Clicker(object):
         NX = X[0]+10
         NY = Y[0]+230
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_com(D-numpy.median(D))
+        xn,yn = centroid_2dg(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box        
         
@@ -244,7 +244,7 @@ class Clicker(object):
         NX = X[0]+25
         NY = Y[0]+470
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_com(D-numpy.median(D))
+        xn,yn = centroid_2dg(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box        
         
@@ -255,7 +255,7 @@ class Clicker(object):
         NX = X[0]+35
         NY = Y[0]+700
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_com(D-numpy.median(D))
+        xn,yn = centroid_2dg(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box
         
@@ -279,8 +279,9 @@ class Clicker(object):
             self.nextframe(1)
             print(self.index)
             print(old_index)
-            self.Select_Target(self.data[self.index],self.Tx[old_index][0],self.Ty[old_index][0],30)
+            self.Select_Target(self.data[self.index],self.Tx[old_index][0],self.Ty[old_index][0],50)
             old_index = self.index
+            self.canvas.update()
         
         #print(self.Tx,self.Ty)
         
@@ -319,7 +320,7 @@ class Clicker(object):
                 annulus_apertures = CircularAnnulus(positions, r_in=30., r_out=40.)
                 phot_table = aperture_photometry(self.data[self.index], apertures)
                 phot_background = aperture_photometry(self.data[self.index], annulus_apertures)
-                bkg_mean = phot_background['aperture_sum'] / annulus_apertures.area()
+                bkg_mean = phot_background['aperture_sum'] / annulus_apertures.area
                 Int= []
                 Area = []
                 Int_bkg1 = []
@@ -329,8 +330,8 @@ class Clicker(object):
                 # 3 because photometry in phot_table start at the indice 3 instead of 0 
                 for num in range(3,3+End-Begin):
                     Int.append(phot_table[0][num])
-                    Area.append(apertures[num-3].area())
-                    Int_bkg1.append(phot_table[0][num] - apertures[num-3].area()*bkg_mean)
+                    Area.append(apertures[num-3].area)
+                    Int_bkg1.append(phot_table[0][num] - apertures[num-3].area*bkg_mean)
     
             
             

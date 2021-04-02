@@ -8,7 +8,7 @@ import argparse
 from astropy.io import fits
 import numpy as np
 
-def Preproc(filenames,MasterBias,Verbose,Suffix,MasterFlat):
+def Preproc(filenames,MasterBias,Verbose,Suffix,MasterFlat,OutFolder):
 
     
     if MasterBias:
@@ -25,9 +25,10 @@ def Preproc(filenames,MasterBias,Verbose,Suffix,MasterFlat):
 
         data = data.astype(int) - Bias_data.astype(int)
 
+        files = elem.split('/')[-1]
 
         hdulist[0].data = data
-        hdulist.writeto(elem.split('.')[0] + '_' +  Suffix + '.fits',overwrite = True)
+        hdulist.writeto(OutFolder + files.split('.')[0] + '_' +  Suffix + '.fits',overwrite = True)
         if Verbose: 
             print('{} \t {} processed'.format(idx+1,elem))
 
@@ -37,6 +38,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Preprocessing of the NOT polarimetric files')
 #    parser.add_argument('-prefix', help='data prefix',
 #                        default=None)
+    
+    parser.add_argument('-o',
+                        help='Folder where to write the files',
+                        default='./')
     parser.add_argument('-s',
                         help='Suffix to add to processed files',
                         default='Procc')
@@ -59,9 +64,10 @@ if __name__ == '__main__':
     Verbose = args.v
     filenames = args.images  
     MasterFlat = args.f
+    OutFolder = args.o
 
     
     print(filenames)
     
-    Preproc(filenames,MasterBias,Verbose,Suffix,MasterFlat)
+    Preproc(filenames,MasterBias,Verbose,Suffix,MasterFlat,OutFolder)
     pass
