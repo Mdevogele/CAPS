@@ -122,12 +122,17 @@ class Clicker(object):
     def left_click(self, event):
         """ select source """
         
-        self.Select_Target(self.data[self.index],self.x,self.y,50)
+        self.Method = 'Centroid'
+        
+        self.Select_Target(self.data[self.index],self.x,self.y,50, Method = self.Method)
 
     def Moffat_click(self, event):
         """ select source """
 
-        self.Select_Target(self.data[self.index],self.x,self.y,50, Method = 'MOFFAT')
+        self.Method = 'MOFFAT'
+
+
+        self.Select_Target(self.data[self.index],self.x,self.y,50, Method = self.Method)
 
 
 
@@ -326,7 +331,7 @@ class Clicker(object):
             self.nextframe(1)
             print(self.index)
             print(old_index)
-            self.Select_Target(self.data[self.index],self.Tx[old_index][0],self.Ty[old_index][0],50)
+            self.Select_Target(self.data[self.index],self.Tx[old_index][0],self.Ty[old_index][0],50,Method = self.Method)
             old_index = self.index
             self.canvas.update()
         
