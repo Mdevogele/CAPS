@@ -70,6 +70,9 @@ class Clicker(object):
 
         print('done!')
 
+        self.Print_Help()
+
+
         # create title bar
         self.title = Label(text='%s (%d/%d)' %
                            (self.images[0],
@@ -112,6 +115,33 @@ class Clicker(object):
         self.canvas.bind("<Button 3>", self.right_click)
         self.canvas.bind("m", self.Moffat_click)
         self.canvas.bind("<Motion>", self.get_xy)
+
+
+    def Print_Help(self):
+        
+        print('Welcome to the CAPS polarimetic reduction pipeline')
+        print(' ')
+        print('*** Navigation from images to images *** ')
+        print(' ')
+        print('Hit "a" to display the next image')
+        print('Hit "x" to display the next image with the selected target')
+        print(' ')
+        print('*** Target selection *** ')
+        print(' ')
+        print('You always only need to click on the top most image of the target')        
+        print('The pipeline knows the offset between all images and will take it into account')        
+        print(' ')
+        print('Do a left click to select the target using a centroid method')
+        print('Hit "m" to select the target using a MOFFAT fit')
+        print('Hit "z" to automatically select the target on all the frames')
+        print(' ')
+        print('If the pipeline misses the target on one or several frames you can navigate to them using "x"')
+        print('It is important to use "x" and not "a" so the pipeline remembers the selected target"')
+        print('Once on a image with wrong target detection simply do left click or "m"')
+        print(' ')
+        print('*** Photometry *** ')
+        print(' ')
+        print('To perform the photometry hit "p"')
 
 
     def get_xy(self,event):
@@ -163,6 +193,10 @@ class Clicker(object):
             self.Show_Targets()
         elif event.char == 'p':
             self.Photometrie()    
+        elif event.char == 'h':
+            self.Print_Help()
+
+
 
     def right_click(self, event):
         """ next frame """
