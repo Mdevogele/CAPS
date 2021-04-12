@@ -17,8 +17,10 @@ def Anal(filenames,Auto,Plot,SS,Target):
 
     if not SS and not Target:
         Target = int(filenames[0].split('-')[0])
-    else:
-        Target = Target.split('_')[0]+ ' ' + Target.split('_')[1]
+    # elif SS:
+    #     Target = filenames[0].split('_')[0].
+    # else:
+    #     Target = Target.split('_')[0]+ ' ' + Target.split('_')[1]
     
         
     
@@ -35,7 +37,7 @@ def Anal(filenames,Auto,Plot,SS,Target):
         u = []
         with open(elem,'r') as f:
             for elem in f.readlines():
-                print(elem)
+                # print(elem)
                 q.append(float(elem.replace('\n',' ').replace('\t',' ').split()[1]))
                 u.append(float(elem.replace('\n',' ').replace('\t',' ').split()[2]))
         q = np.array(q)
@@ -44,7 +46,7 @@ def Anal(filenames,Auto,Plot,SS,Target):
         JD.append(float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
         qq.append(q)
         uu.append(u)
-        print(float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
+        # print(float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
         if not SS:
             obj = Horizons(id=Target, location='010', epochs=float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
             eph = obj.ephemerides()
@@ -88,54 +90,56 @@ def Anal(filenames,Auto,Plot,SS,Target):
 
 
 
+    # Here q and u are reversed. q should be the value around 3-4% and u should be the small one. 
+    # The values are corrected for the print statements so q is printed first then u    
 
     qq = np.array(qq)
     uu = np.array(uu)
+
+    if Auto:
+        min_index, min_value = min(enumerate(np.std(uu,axis=0)/np.abs(np.median(uu,axis=0))), key=operator.itemgetter(1))
+        print('%.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
+    else:
+        min_index = int(input("What aperture do you want to use?: "))
+        print('q = %.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
+    
+    with open('Best_q','w') as f:
+        f.write('%.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
+
+    U = uu[:,min_index]
+    
+    min_index_u = min_index
+
 
     if Auto:
         min_index, min_value = min(enumerate(np.std(qq,axis=0)/np.abs(np.median(qq,axis=0))), key=operator.itemgetter(1))
         print(min_index)
         print('%.5f +- %.5f' % (np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
     else:
-        min_index = int(input("What aperture do you want to use?: "))
-        print('%.5f +- %.5f' % (np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
+        print('u = %.5f +- %.5f' % (-np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
         
     
-    with open('Best_q','w') as f:
-        f.write('%.5f +- %.5f' % (np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
+    with open('Best_u','w') as f:
+        f.write('%.5f +- %.5f' % (-np.median(qq[:,min_index]), np.std(qq[:,min_index])/np.sqrt(len(qq[:,min_index]))))
 
     
     Q = qq[:,min_index]
     
     min_index_q = min_index
-    
-    ff = open('Result','w')
 
-
-    if Auto:
-        min_index, min_value = min(enumerate(np.std(uu,axis=0)/np.abs(np.median(uu,axis=0))), key=operator.itemgetter(1))
-        print('%.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
-    else:
-        print('%.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
-        
-    print(min_index)
-    with open('Best_u','w') as f:
-        f.write('%.5f +- %.5f' % (np.median(uu[:,min_index]), np.std(uu[:,min_index])/np.sqrt(len(uu[:,min_index]))))
-
-    U = uu[:,min_index]
-    
-    min_index_u = min_index
     
 
     Alpha = np.array(Alpha)
     PlAng = np.array(PlAng)
+
+    ff = open('Result','w')
 
     if not SS:
         for JDD,AA,PL, QQ, UU in zip(JD,Alpha,PlAng,Q,U):
             ff.write('%.5f \t %.2f \t %.2f \t %.5f \t %.5f \n' % (JDD, AA, PL, QQ, UU))
         ff.close()
     else:
-        ff.write('%.5f \t %.5f \t %.5f \n' % (np.median(JD), np.median(Q), np.median(U)))
+        ff.write('%.5f \t %.5f \n' % (np.median(U), -np.median(Q)))
         ff.close()
 
 
