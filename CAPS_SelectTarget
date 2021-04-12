@@ -10,6 +10,7 @@ from __future__ import division
 from past.utils import old_div
 import os, sys
 import numpy
+import numpy as np
 import warnings
 from tkinter import *
 from PIL import Image
@@ -31,7 +32,12 @@ from astropy.stats import sigma_clipped_stats
 from photutils.datasets import make_4gaussians_image
 from photutils import centroid_com, centroid_1dg, centroid_2dg
 
+from astropy.modeling import models, fitting
+
 import time
+
+import warnings
+
 
 
 # self.image = number of the displayed image
@@ -104,15 +110,25 @@ class Clicker(object):
         self.canvas.bind("<Key>", self.key)
         self.canvas.bind("<Button 1>", self.left_click)
         self.canvas.bind("<Button 3>", self.right_click)
+        self.canvas.bind("m", self.Moffat_click)
+        self.canvas.bind("<Motion>", self.get_xy)
 
 
+    def get_xy(self,event):
+        
+        self.x = old_div(event.x,self.zoom)
+        self.y = old_div(event.y,self.zoom)
+        
     def left_click(self, event):
         """ select source """
-        x, y = old_div(event.x,self.zoom), old_div(event.y,self.zoom)
         
-        
-        
-        self.Select_Target(self.data[self.index],x,y,50)
+        self.Select_Target(self.data[self.index],self.x,self.y,50)
+
+    def Moffat_click(self, event):
+        """ select source """
+
+        self.Select_Target(self.data[self.index],self.x,self.y,50, Method = 'MOFFAT')
+
 
 
     def key(self, event):
@@ -124,8 +140,7 @@ class Clicker(object):
             # next frame
             self.nextframe(1)
         elif event.char == 'q':
-            # quit
-            self.top.quit()
+            self.top.quit()   
         elif event.char == '+':
             # zoom in
             if self.zoom < 4.:
@@ -146,7 +161,11 @@ class Clicker(object):
 
     def right_click(self, event):
         """ next frame """
-        self.nextframe(1)
+        x, y = old_div(event.x,self.zoom), old_div(event.y,self.zoom)
+        
+        print(x,y)
+        
+        self.Select_Target(self.data[self.index],x,y,50, Method = 'MOFFAT')
 
     def read_all_fits(self, filenames, zoom=0.5):
         """ read in all image data, scale images """
@@ -208,8 +227,22 @@ class Clicker(object):
         #delete previous circles
         for elem in self.redcircle:
             self.canvas.delete(elem)
+
+    def MOFFAT_Fit(self, D):
+        Dimension = D.shape
+        y, x = numpy.mgrid[:Dimension[0], :Dimension[1]]
+                
+        p_init = models.Moffat2D(np.max(D),Dimension[0]/2,Dimension[1]/2)
+        fit_p = fitting.LevMarLSQFitter()        
+        
+        with warnings.catch_warnings():
+            # Ignore model linearity warning from the fitter
+            warnings.simplefilter('ignore')
+            p = fit_p(p_init, x, y, D)        
+
+        return p.x_0.value,p.y_0.value   
             
-    def Select_Target(self,image,x,y,box):
+    def Select_Target(self,image,x,y,box,Method ='Centroid'):
         
         X = []
         Y = []
@@ -219,8 +252,10 @@ class Clicker(object):
             self.canvas.delete(elem)
     
         D = image[int(y)-box:int(y)+box,int(x)-box:int(x)+box]
-                
-        xn,yn = centroid_2dg(D)
+        if Method == 'Centroid':
+            xn,yn = centroid_2dg(D)
+        if Method == 'MOFFAT':
+            xn,yn = self.MOFFAT_Fit(D)     
         print(xn,yn)
         xn = xn+int(x)-box
         yn = yn+int(y)-box
@@ -233,8 +268,13 @@ class Clicker(object):
         
         NX = X[0]+10
         NY = Y[0]+230
+        
+        # Use a centroid or a MOFFAT fit to detect the center of the target
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_2dg(D)
+        if Method == 'Centroid':
+            xn,yn = centroid_2dg(D)
+        if Method == 'MOFFAT':
+            xn,yn = self.MOFFAT_Fit(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box        
         
@@ -244,7 +284,10 @@ class Clicker(object):
         NX = X[0]+25
         NY = Y[0]+470
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_2dg(D)
+        if Method == 'Centroid':
+            xn,yn = centroid_2dg(D)
+        if Method == 'MOFFAT':
+            xn,yn = self.MOFFAT_Fit(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box        
         
@@ -255,7 +298,10 @@ class Clicker(object):
         NX = X[0]+35
         NY = Y[0]+700
         D = image[int(NY)-box:int(NY)+box,int(NX)-box:int(NX)+box]
-        xn,yn = centroid_2dg(D)
+        if Method == 'Centroid':
+            xn,yn = centroid_2dg(D)
+        if Method == 'MOFFAT':
+            xn,yn = self.MOFFAT_Fit(D)
         xn = xn+int(NX)-box
         yn = yn+int(NY)-box
         
@@ -271,6 +317,7 @@ class Clicker(object):
                                                     width=2))    
         self.Tx[self.index] = X 
         self.Ty[self.index] = Y
+
 
     def Auto_Detect(self):
         
@@ -342,6 +389,9 @@ class Clicker(object):
             qq = (phot[0]-phot[1])/(phot[0]+phot[1])
             q.append(qq.flatten())
             uu = (phot[2]-phot[3])/(phot[2]+phot[3])
+            
+            print('Coordonnee images: ' + str(numpy.mean(phot[0])))
+            
             with open(filename +'.txt', 'w') as f:
                 for elem3,elem4 in zip(qq,uu):
                     for elem2,elem1 in zip(elem3,elem4):
