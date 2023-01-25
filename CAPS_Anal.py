@@ -2,6 +2,7 @@
 
 """ CAPS_Anal - Extract best q and u from curve of growth
     v1.0: 2018-05-05, mdevogele@lowell.edu
+    v1.1: 2023-01-25, mdevogele@ucf.edu
 """
 
 import matplotlib.pyplot as plt
@@ -17,27 +18,25 @@ def Anal(filenames,Auto,Plot,SS,Target):
 
     if not SS and not Target:
         Target = int(filenames[0].split('-')[0])
-    # elif SS:
-    #     Target = filenames[0].split('_')[0].
-    # else:
-    #     Target = Target.split('_')[0]+ ' ' + Target.split('_')[1]
+        if isinstance(Target,int):
+            print('The target is: {:d}'.format(Target))
+        else:
+            print('The target is: {:s}'.format(Target))
+    elif Target:
+        Target = Target
     
-        
-    
-    print(Target)
+    ## Initiate some variable
     qq = []
     uu = [] 
     Alpha = []
     PlAng = []
-    
     JD = []
+
     for elem in filenames:
-        FileInfo = elem.split('_')
         q = []
         u = []
         with open(elem,'r') as f:
             for elem in f.readlines():
-                # print(elem)
                 q.append(float(elem.replace('\n',' ').replace('\t',' ').split()[1]))
                 u.append(float(elem.replace('\n',' ').replace('\t',' ').split()[2]))
         q = np.array(q)
@@ -49,26 +48,20 @@ def Anal(filenames,Auto,Plot,SS,Target):
         # print(float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
         if not SS:
             obj = Horizons(id=Target, location='010', epochs=float(elem.replace('\n',' ').replace('\t',' ').split()[0]))
-            eph = obj.ephemerides()
+            ## Try to get the ephemeris
+            try:
+                eph = obj.ephemerides()
+            except ValueError:
+                ## Sometime if a previous attempt to get the ephemeris failed
+                ## and that attempt was saved into the cache we need to ignore the cache files
+                eph = obj.ephemerides(cache=False)
+
+            ## Store the phase angle and the suntargetPA angle
             Alpha.append(eph['alpha'][0])
             PlAng.append(eph['sunTargetPA'][0])  
 
 
-#    q = []
-#    u = []
-#    JD = []
-#    for files in filename:
-#        f.open(files,'r')
-#        for elem in f.readlines().split():
-#            q.append(elem[1])
-#            u.append(elem[2])
-#            JD.append(elem[0])
-
-#    q = np.array(q) 
-#    u = np.array(u)
-#    JD = np.array(JD)        
-#    stokes = np.array(stokes)
-#    SS = stokes.reshape(len(stokes)/27,27)      
+  
 
 
 
@@ -76,19 +69,12 @@ def Anal(filenames,Auto,Plot,SS,Target):
         plt.figure()
         for elem1,elem2 in zip(qq,uu):
 
-#            plt.plot(elem1)
             plt.plot(np.linspace(0,39,40),np.median(qq,axis=0),linewidth = 5,color = 'r')
             plt.fill_between(np.linspace(0,39,40),np.median(qq,axis=0)-np.std(qq,axis=0),np.median(qq,axis=0)+np.std(qq,axis=0),alpha = 0.3)
-#            plt.plot(elem2)
             plt.plot(np.median(uu,axis=0),linewidth = 5,color = 'r')
             plt.fill_between(np.linspace(0,39,40),np.median(uu,axis=0)-np.std(uu,axis=0),np.median(uu,axis=0)+np.std(uu,axis=0),alpha = 0.3)
-#            plt.plot([min_index_q, min_index_q], [min(elem1), max(elem1)])
-#            plt.plot([min_index_u, min_index_u], [min(elem2), max(elem2)])
 
         plt.show()
-
-
-
 
     # Here q and u are reversed. q should be the value around 3-4% and u should be the small one. 
     # The values are corrected for the print statements so q is printed first then u    
@@ -127,16 +113,16 @@ def Anal(filenames,Auto,Plot,SS,Target):
     
     min_index_q = min_index
 
-    
-
     Alpha = np.array(Alpha)
     PlAng = np.array(PlAng)
 
     ff = open('Result','w')
 
     if not SS:
+        ff.write('JD           Alpha  PL angle     u       q \n')
         for JDD,AA,PL, QQ, UU in zip(JD,Alpha,PlAng,Q,U):
-            ff.write('%.5f \t %.2f \t %.2f \t %.5f \t %.5f \n' % (JDD, AA, PL, QQ, UU))
+            ff.write('{:.5f} {:6.2f} {:6.2f} {: 9.5f} {: 9.5f} \n'.format(JDD, AA, PL, QQ, UU))
+            # ff.write('%.5f \t %.2f \t %.2f \t %.5f \t %.5f \n' % (JDD, AA, PL, QQ, UU))
         ff.close()
     else:
         ff.write('%.5f \t %.5f \n' % (np.median(U), -np.median(Q)))
